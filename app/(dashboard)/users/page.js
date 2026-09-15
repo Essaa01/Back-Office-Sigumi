@@ -178,9 +178,6 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <Link href={`/users/${user.id}/edit`} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10 rounded">
-                            Tinjau Profil
-                         </Link>
                          <button
                             onClick={() => handleDelete(user.id, user.full_name)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"

@@ -8,6 +8,19 @@ import { Plus, Trash2, Edit, MapPin, Clock, Star, Map, Camera, ExternalLink } fr
 
 const ITEMS_PER_PAGE = 10
 
+const getImageSrc = (url) => {
+  try {
+    const imageUrl = new URL(url)
+    imageUrl.pathname = imageUrl.pathname
+      .split("/")
+      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+      .join("/")
+    return imageUrl.toString()
+  } catch {
+    return url
+  }
+}
+
 export default function TourismPage() {
   const [destinations, setDestinations] = useState([])
   const [loading, setLoading] = useState(false)
@@ -120,7 +133,7 @@ export default function TourismPage() {
                     {/* Thumbnail */}
                     <td className="px-6 py-4 whitespace-nowrap pl-6">
                         {item.photo_url ? (
-                            <img src={item.photo_url} alt={item.name} className="w-10 h-10 rounded object-cover shadow-sm border border-gray-200 dark:border-white/10" />
+                            <img src={getImageSrc(item.photo_url)} alt={item.name} className="w-10 h-10 rounded object-cover shadow-sm border border-gray-200 dark:border-white/10" />
                         ) : (
                             <div className="w-10 h-10 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center border border-gray-200 dark:border-white/10">
                                 <Camera className="w-4 h-4 text-gray-400" />

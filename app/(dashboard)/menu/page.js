@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Newspaper, Building2, Map, Tent, MessageSquare, Users } from "lucide-react"
+import { Newspaper, Building2, Map, Tent, MessageSquare, Users, BookOpen } from "lucide-react"
 
 const modules = [
     {
@@ -9,6 +9,13 @@ const modules = [
         description: "Manajemen rilis berita, pengumuman, dan artikel.",
         icon: Newspaper,
         href: "/news",
+        available: true,
+    },
+    {
+        title: "Edukasi",
+        description: "Kelola materi edukasi kebencanaan untuk aplikasi mobile.",
+        icon: BookOpen,
+        href: "/edukasi",
         available: true,
     },
     {
