@@ -31,18 +31,22 @@ export default function LoginPage() {
       }
 
       // Login sukses
-      // Simpan data admin ke localStorage
+      // Simpan data admin (termasuk role) ke localStorage
       localStorage.setItem(
         "adminData",
         JSON.stringify({
           id: data.id,
           email: data.email,
           lokasi: data.lokasi,
+          role: data.role,
         })
       )
 
       toast.success(`Selamat Datang Admin!`)
-      router.push("/menu") // Arahkan ke halaman menu/dashboard
+      // Redirect berdasarkan role:
+      // Dinas Pariwisata → /tourism, lainnya → /menu
+      const defaultRoute = data.role === "Dinas Pariwisata" ? "/tourism" : "/menu"
+      router.push(defaultRoute)
     } catch (err) {
       toast.error("Terjadi kesalahan saat memproses login")
     } finally {

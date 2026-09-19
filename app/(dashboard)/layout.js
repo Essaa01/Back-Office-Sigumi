@@ -1,23 +1,52 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Sidebar from "@/components/layout/sidebar"
 import { Loader2 } from "lucide-react"
+import { resolveMenuKey, getDefaultRoute, canAccessMenu } from "@/lib/rbac"
 
 export default function Layout({ children }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isAuthorized, setIsAuthorized] = useState(false)
 
   useEffect(() => {
-    const adminData = localStorage.getItem("adminData")
-    
-    if (!adminData) {
+    const raw = localStorage.getItem("adminData")
+
+    if (!raw) {
       router.replace("/login")
-    } else {
-      setIsAuthorized(true)
+      return
     }
-  }, [router])
+
+    let adminData
+    try {
+      adminData = JSON.parse(raw)
+    } catch {
+      router.replace("/login")
+      return
+    }
+
+    const role = adminData?.role
+    if (!role) {
+      // Legacy session without role — force re-login
+      localStorage.removeItem("adminData")
+      router.replace("/login")
+      return
+    }
+
+    // Route guard: resolve current path to a menu key, then check permission
+    const menuKey = resolveMenuKey(pathname)
+    if (menuKey !== null) {
+      if (!canAccessMenu(role, menuKey)) {
+        // Redirect to first allowed route for this role
+        router.replace(getDefaultRoute(role))
+        return
+      }
+    }
+
+    setIsAuthorized(true)
+  }, [router, pathname])
 
   if (!isAuthorized) {
     return (

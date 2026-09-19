@@ -7,7 +7,8 @@ import { uploadMedia } from "@/services/uploadService"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ArrowLeft, Save } from "lucide-react"
-import WordPressMediaPicker from "@/components/edukasi/WordPressMediaPicker"
+import RichTextEditor from "@/components/RichTextEditor"
+import SimpleImagePicker from "@/components/edukasi/SimpleImagePicker"
 
 const CATEGORIES = [
   "Siaga 1",
@@ -16,12 +17,19 @@ const CATEGORIES = [
   "Siaga 4",
 ]
 
+const AUDIENCES = [
+  "Umum",
+  "Anak-Anak",
+  "Difabel",
+]
+
 export default function EditEdukasi() {
   const { id } = useParams()
   const router = useRouter()
 
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("")
+  const [audience, setAudience] = useState("Umum")
   const [content, setContent] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
@@ -40,6 +48,7 @@ export default function EditEdukasi() {
 
         setTitle(data.title || "")
         setCategory(data.category || "")
+        setAudience(data.audience || "Umum")
         setContent(data.content || "")
         setImageUrl(data.image_url || "")
       } catch {
@@ -58,13 +67,14 @@ export default function EditEdukasi() {
       const loadingToast = toast.loading("Menyimpan revisi konten edukasi...")
 
       let finalImageUrl = imageUrl
-      if (pendingFile && (!imageUrl || imageUrl.startsWith("blob:"))) {
+      if (pendingFile && (!imageUrl || imageUrl.startsWith("blob:") || imageUrl.startsWith("data:"))) {
         finalImageUrl = await uploadMedia(pendingFile)
       }
 
       await educationService.update(id, {
         title,
         category: category || null,
+        audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
       })
@@ -119,41 +129,68 @@ export default function EditEdukasi() {
             />
           </div>
 
-          {/* Kategori */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Kategori
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-            >
-              <option value="">Pilih kategori (opsional)</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+          {/* Target Audiens & Kategori */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Target Audiens
+              </label>
+              <select
+                value={audience}
+                onChange={(e) => {
+                  const newAudience = e.target.value
+                  setAudience(newAudience)
+                  if (newAudience !== "Umum" && category?.toLowerCase().includes("siaga")) {
+                    setCategory("")
+                  }
+                }}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium"
+              >
+                {AUDIENCES.map((aud) => (
+                  <option key={aud} value={aud}>
+                    {aud}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Kategori
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="">Pilih kategori (opsional)</option>
+                {CATEGORIES.map((cat) => {
+                  const isSiaga = cat.toLowerCase().includes("siaga")
+                  const isDisabled = audience !== "Umum" && isSiaga
+                  return (
+                    <option key={cat} value={cat} disabled={isDisabled}>
+                      {cat} {isDisabled ? "(Hanya Umum)" : ""}
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
           </div>
 
           {/* Konten */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Isi Konten Edukasi
             </label>
-            <textarea
-              required
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm resize-none"
-              rows={10}
+              onChange={setContent}
+              placeholder="Tuliskan materi edukasi lengkap beserta gambar penjelasan di sini..."
             />
           </div>
 
-          {/* WordPress-Style Media Manager */}
-          <WordPressMediaPicker
+          {/* Simple Image Picker for Cover */}
+          <SimpleImagePicker
             value={imageUrl}
             onChange={setImageUrl}
             onFileSelect={setPendingFile}

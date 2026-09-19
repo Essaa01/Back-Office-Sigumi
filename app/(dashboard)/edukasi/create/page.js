@@ -7,7 +7,8 @@ import { uploadMedia } from "@/services/uploadService"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ArrowLeft, Save } from "lucide-react"
-import WordPressMediaPicker from "@/components/edukasi/WordPressMediaPicker"
+import RichTextEditor from "@/components/RichTextEditor"
+import SimpleImagePicker from "@/components/edukasi/SimpleImagePicker"
 
 const CATEGORIES = [
   "Siaga 1",
@@ -16,10 +17,17 @@ const CATEGORIES = [
   "Siaga 4",
 ]
 
+const AUDIENCES = [
+  "Umum",
+  "Anak-Anak",
+  "Difabel",
+]
+
 export default function CreateEdukasi() {
   const router = useRouter()
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("")
+  const [audience, setAudience] = useState("Umum")
   const [content, setContent] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
@@ -34,13 +42,14 @@ export default function CreateEdukasi() {
 
       let finalImageUrl = imageUrl
       // If user selected a local file that hasn't finished direct upload
-      if (pendingFile && (!imageUrl || imageUrl.startsWith("blob:"))) {
+      if (pendingFile && (!imageUrl || imageUrl.startsWith("blob:") || imageUrl.startsWith("data:"))) {
         finalImageUrl = await uploadMedia(pendingFile)
       }
 
       const { error } = await educationService.create({
         title,
         category: category || null,
+        audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
       })
@@ -98,73 +107,96 @@ export default function CreateEdukasi() {
             />
           </div>
 
-          {/* Kategori */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Kategori
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-            >
-              <option value="">Pilih kategori (opsional)</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+          {/* Target Audiens & Kategori */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Target Audiens
+              </label>
+              <select
+                value={audience}
+                onChange={(e) => {
+                  const newAudience = e.target.value
+                  setAudience(newAudience)
+                  if (newAudience !== "Umum" && category?.toLowerCase().includes("siaga")) {
+                    setCategory("")
+                  }
+                }}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium"
+              >
+                {AUDIENCES.map((aud) => (
+                  <option key={aud} value={aud}>
+                    {aud}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Kategori
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="">Pilih kategori (opsional)</option>
+                {CATEGORIES.map((cat) => {
+                  const isSiaga = cat.toLowerCase().includes("siaga")
+                  const isDisabled = audience !== "Umum" && isSiaga
+                  return (
+                    <option key={cat} value={cat} disabled={isDisabled}>
+                      {cat} {isDisabled ? "(Hanya Umum)" : ""}
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
           </div>
 
           {/* Konten */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Isi Konten Edukasi
             </label>
-            <textarea
-              required
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm resize-none"
-              rows={10}
-              placeholder="Tuliskan materi edukasi lengkap di sini..."
+              onChange={setContent}
+              placeholder="Tuliskan materi edukasi lengkap beserta gambar penjelasan di sini..."
             />
           </div>
 
-          {/* WordPress-Style Media Manager */}
-          <WordPressMediaPicker
+          {/* Simple Image Picker for Cover */}
+          <SimpleImagePicker
             value={imageUrl}
             onChange={setImageUrl}
             onFileSelect={setPendingFile}
           />
         </div>
 
-        {/* Action Footer */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-black/20 border-t border-gray-200 dark:border-white/10 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/5 transition-colors"
+        {/* Action Buttons */}
+        <div className="px-6 py-5 md:px-8 bg-gray-50 dark:bg-black/20 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3">
+          <Link
+            href="/edukasi"
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
           >
             Batal
-          </button>
+          </Link>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors focus:ring-4 focus:ring-blue-500/20"
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm focus:ring-4 focus:ring-blue-500/20"
           >
             {loading ? (
-              <>Menyimpan...</>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <>
-                <Save className="w-4 h-4" /> Publikasikan
-              </>
+              <Save className="w-4 h-4" />
             )}
+            <span>{loading ? "Menyimpan..." : "Simpan & Publikasikan"}</span>
           </button>
         </div>
       </form>
     </div>
   )
 }
-

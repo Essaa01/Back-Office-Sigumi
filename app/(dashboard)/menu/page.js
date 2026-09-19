@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Newspaper, Building2, Map, Tent, MessageSquare, Users, BookOpen } from "lucide-react"
+import { hasMenuAccess } from "@/lib/utils/auth"
 
 const modules = [
     {
@@ -9,6 +10,7 @@ const modules = [
         description: "Manajemen rilis berita, pengumuman, dan artikel.",
         icon: Newspaper,
         href: "/news",
+        menuKey: "news",
         available: true,
     },
     {
@@ -16,6 +18,7 @@ const modules = [
         description: "Kelola materi edukasi kebencanaan untuk aplikasi mobile.",
         icon: BookOpen,
         href: "/edukasi",
+        menuKey: "edukasi",
         available: true,
     },
     {
@@ -23,6 +26,7 @@ const modules = [
         description: "Kelola data operasional posko dan barak evakuasi.",
         icon: Tent,
         href: "/shelters",
+        menuKey: "shelters",
         available: true,
     },
     {
@@ -30,6 +34,7 @@ const modules = [
         description: "Manajemen katalog pariwisata teritorial.",
         icon: Map,
         href: "/tourism",
+        menuKey: "tourism",
         available: true,
     },
     {
@@ -37,6 +42,7 @@ const modules = [
         description: "Monitoring dan verifikasi laporan insiden warga.",
         icon: MessageSquare,
         href: "/pelaporan",
+        menuKey: "pelaporan",
         available: true,
     },
     {
@@ -44,6 +50,7 @@ const modules = [
         description: "Manajemen hak akses dan informasi akun pengguna.",
         icon: Users,
         href: "/users",
+        menuKey: "users",
         available: true,
     },
     {
@@ -51,11 +58,15 @@ const modules = [
         description: "Pemantauan pantauan visual CCTV realtime.",
         icon: Building2,
         href: "#",
+        menuKey: "cctv",
         available: false,
     },
 ]
 
 export default function MenuPage() {
+    // Filter cards by RBAC — same rule as sidebar
+    const visibleModules = modules.filter((mod) => hasMenuAccess(mod.menuKey))
+
     return (
         <div className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto font-sans">
             {/* Header */}
@@ -67,7 +78,7 @@ export default function MenuPage() {
 
             {/* Module Cards Grid */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modules.map((mod) => (
+                {visibleModules.map((mod) => (
                     <ModuleCard key={mod.title} module={mod} />
                 ))}
             </div>

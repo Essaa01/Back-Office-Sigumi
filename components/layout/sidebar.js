@@ -5,20 +5,29 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import ThemeToggle from "@/components/ThemeToggle"
 import Image from "next/image"
-import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen } from "lucide-react"
+import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
+import { canAccessMenu } from "@/lib/rbac"
 
-const menuItems = [
-  { href: "/menu", label: "Menu Utama", icon: LayoutDashboard },
-  { href: "/news", label: "News", icon: Newspaper },
-  { href: "/edukasi", label: "Edukasi", icon: BookOpen },
-  { href: "/shelters", label: "Titik Evakuasi", icon: Tent },
-  { href: "/tourism", label: "Wisata", icon: Map },
-  { href: "/cctv", label: "CCTV Gunung", icon: Video },
-  { href: "/pelaporan", label: "Pelaporan Warga", icon: MessageSquare },
-  { href: "/users", label: "Users", icon: Users },
+// All possible menu items — each has a `menuKey` matching MENU_KEYS in lib/rbac.js
+const ALL_MENU_ITEMS = [
+  { href: "/menu",      label: "Menu Utama",       icon: LayoutDashboard, menuKey: "menu" },
+  { href: "/news",      label: "News",             icon: Newspaper,        menuKey: "news" },
+  { href: "/edukasi",   label: "Edukasi",          icon: BookOpen,         menuKey: "edukasi" },
+  { href: "/shelters",  label: "Titik Evakuasi",   icon: Tent,             menuKey: "shelters" },
+  { href: "/tourism",   label: "Wisata",           icon: Map,              menuKey: "tourism" },
+  { href: "/cctv",      label: "CCTV Gunung",      icon: Video,            menuKey: "cctv" },
+  { href: "/pelaporan", label: "Pelaporan Warga",  icon: MessageSquare,    menuKey: "pelaporan" },
+  { href: "/users",     label: "Users",            icon: Users,            menuKey: "users" },
 ]
+
+// Role display config
+const ROLE_BADGE_STYLE = {
+  "BPBD":             { label: "BPBD",             color: "text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20" },
+  "MDMC":             { label: "MDMC",             color: "text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 border-purple-100 dark:border-purple-500/20" },
+  "Dinas Pariwisata": { label: "Dinas Pariwisata", color: "text-green-700  dark:text-green-400  bg-green-50  dark:bg-green-500/10  border-green-100  dark:border-green-500/20" },
+}
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -29,6 +38,11 @@ export default function Sidebar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  // Filter menu items based on role from localStorage
+  const menuItems = admin
+    ? ALL_MENU_ITEMS.filter((item) => canAccessMenu(admin.role, item.menuKey))
+    : []
 
   useEffect(() => {
     // Read admin data from localStorage
@@ -146,14 +160,16 @@ export default function Sidebar() {
                   <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate">
                     {admin.email?.split('@')[0]}
                   </span>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                    Administrator
-                  </span>
+                  {admin.role && (
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border w-fit mt-0.5 ${ROLE_BADGE_STYLE[admin.role]?.color ?? "text-gray-500 bg-gray-100 border-gray-200"}`}>
+                      {ROLE_BADGE_STYLE[admin.role]?.label ?? admin.role}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-500/20 w-full justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors">
                 <MapPin size={12} className="shrink-0" />
-                <span>Wilayah {admin.lokasi}</span>
+                <span>{admin.lokasi ? `Wilayah ${admin.lokasi}` : "Semua Wilayah"}</span>
               </div>
             </button>
           )}

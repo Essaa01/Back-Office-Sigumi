@@ -14,6 +14,12 @@ const categoryColors = {
   "Siaga 4": "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20",
 }
 
+const audienceColors = {
+  "Umum": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
+  "Anak-Anak": "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20",
+  "Difabel": "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20",
+}
+
 export default function DetailEdukasi() {
   const { id } = useParams()
 
@@ -93,7 +99,12 @@ export default function DetailEdukasi() {
         {/* Content Body */}
         <div className="p-6 md:p-10">
           {/* Header Metadata */}
-          <div className="flex flex-wrap items-center gap-4 mb-4 text-xs font-medium text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-3 mb-4 text-xs font-medium text-gray-500 dark:text-gray-400">
+            {edukasi.audience && (
+              <span className={`px-2.5 py-1 rounded-md border font-semibold ${audienceColors[edukasi.audience] || "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"}`}>
+                Audiens: {edukasi.audience}
+              </span>
+            )}
             {edukasi.category && (
               <span className={`px-2.5 py-1 rounded-md border font-semibold ${categoryColors[edukasi.category] || "bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10"}`}>
                 {edukasi.category}
@@ -123,11 +134,10 @@ export default function DetailEdukasi() {
           </h1>
 
           {/* Prose */}
-          <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-            <p className="whitespace-pre-line leading-loose text-base md:text-[1.05rem]">
-              {edukasi.content}
-            </p>
-          </div>
+          <div 
+            className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-loose text-base md:text-[1.05rem]"
+            dangerouslySetInnerHTML={{ __html: edukasi.content }}
+          />
         </div>
 
       </article>

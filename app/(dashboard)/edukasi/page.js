@@ -16,6 +16,12 @@ const CATEGORIES = [
   "Siaga 4",
 ]
 
+const AUDIENCES = [
+  "Umum",
+  "Anak-Anak",
+  "Difabel",
+]
+
 const categoryColors = {
   "Siaga 1": "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
   "Siaga 2": "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
@@ -23,11 +29,18 @@ const categoryColors = {
   "Siaga 4": "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20",
 }
 
+const audienceColors = {
+  "Umum": "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
+  "Anak-Anak": "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20",
+  "Difabel": "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20",
+}
+
 export default function EdukasiPage() {
   const [edukasiList, setEdukasiList] = useState([])
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState("")
+  const [selectedAudience, setSelectedAudience] = useState("")
 
   const fetchData = async () => {
     try {
@@ -60,9 +73,11 @@ export default function EdukasiPage() {
     }
   }
 
-  const filteredList = selectedCategory
-    ? edukasiList.filter((item) => item.category === selectedCategory)
-    : edukasiList
+  const filteredList = edukasiList.filter((item) => {
+    const matchCategory = !selectedCategory || item.category === selectedCategory
+    const matchAudience = !selectedAudience || (item.audience || "Umum") === selectedAudience
+    return matchCategory && matchAudience
+  })
 
   const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE)
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE
@@ -77,7 +92,7 @@ export default function EdukasiPage() {
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCategory])
+  }, [selectedCategory, selectedAudience])
 
   return (
     <div className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto font-sans">
@@ -101,35 +116,71 @@ export default function EdukasiPage() {
         </Link>
       </div>
 
-      {/* Category Filter */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mr-1">
-          <Filter className="w-4 h-4" />
-          <span className="font-medium">Kategori:</span>
-        </div>
-        <button
-          onClick={() => setSelectedCategory("")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-            selectedCategory === ""
-              ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:border-white/10 dark:hover:bg-white/5"
-          }`}
-        >
-          Semua
-        </button>
-        {CATEGORIES.map((cat) => (
+      {/* Filter Section */}
+      <div className="flex flex-col gap-3 mb-6 bg-white dark:bg-[#1a1a2e] border border-gray-200 dark:border-white/10 rounded-xl p-4">
+        {/* Audience Filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">
+            <Filter className="w-3.5 h-3.5" />
+            <span>Audiens:</span>
+          </div>
           <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => setSelectedAudience("")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              selectedCategory === cat
+              selectedAudience === ""
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:border-white/10 dark:hover:bg-white/5"
+            }`}
+          >
+            Semua Audiens
+          </button>
+          {AUDIENCES.map((aud) => (
+            <button
+              key={aud}
+              onClick={() => setSelectedAudience(aud)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                selectedAudience === aud
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:border-white/10 dark:hover:bg-white/5"
+              }`}
+            >
+              {aud}
+            </button>
+          ))}
+        </div>
+
+        <div className="h-px bg-gray-100 dark:bg-white/5" />
+
+        {/* Category Filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">
+            <Filter className="w-3.5 h-3.5" />
+            <span>Kategori:</span>
+          </div>
+          <button
+            onClick={() => setSelectedCategory("")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              selectedCategory === ""
                 ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white"
                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:border-white/10 dark:hover:bg-white/5"
             }`}
           >
-            {cat}
+            Semua
           </button>
-        ))}
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                selectedCategory === cat
+                  ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:border-white/10 dark:hover:bg-white/5"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading && (
@@ -174,14 +225,17 @@ export default function EdukasiPage() {
                     <BookOpen className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                   </div>
                 )}
-                {/* Category Badge */}
-                {item.category && (
-                  <div className="absolute top-3 left-3">
-                    <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border ${categoryColors[item.category] || "bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10"}`}>
+                {/* Category & Audience Badges */}
+                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 items-center">
+                  <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border shadow-xs ${audienceColors[item.audience] || "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20"}`}>
+                    {item.audience || "Umum"}
+                  </span>
+                  {item.category && (
+                    <span className={`text-[10px] font-semibold px-2 py-1 rounded-md border shadow-xs ${categoryColors[item.category] || "bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10"}`}>
                       {item.category}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
                 {/* Action Buttons */}
                 <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Link
@@ -210,9 +264,10 @@ export default function EdukasiPage() {
                 <h3 className="font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 leading-snug">
                   {item.title}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 flex-1 mb-4">
-                  {item.content}
-                </p>
+                <p 
+                  className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 flex-1 mb-4"
+                  dangerouslySetInnerHTML={{ __html: item.content?.replace(/<[^>]*>?/gm, '') }}
+                />
 
                 {/* Meta Footer */}
                 <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 pt-3 border-t border-gray-100 dark:border-white/5">
