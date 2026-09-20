@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Newspaper, Building2, Map, Tent, MessageSquare, Users, BookOpen } from "lucide-react"
+import { Newspaper, Building2, Map, Tent, MessageSquare, Users, BookOpen, Navigation } from "lucide-react"
 import { hasMenuAccess } from "@/lib/utils/auth"
 
 const modules = [
@@ -60,6 +60,14 @@ const modules = [
         href: "#",
         menuKey: "cctv",
         available: false,
+    },
+    {
+        title: "Tracking Pendaki",
+        description: "Monitoring rute dan lokasi pendaki secara realtime.",
+        icon: Navigation,
+        href: "/tracking",
+        menuKey: "tracking",
+        available: true,
     },
 ]
 

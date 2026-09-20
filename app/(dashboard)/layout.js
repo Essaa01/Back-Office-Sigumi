@@ -28,6 +28,7 @@ export default function Layout({ children }) {
     }
 
     const role = adminData?.role
+    const lokasi = adminData?.lokasi
     if (!role) {
       // Legacy session without role — force re-login
       localStorage.removeItem("adminData")
@@ -38,7 +39,7 @@ export default function Layout({ children }) {
     // Route guard: resolve current path to a menu key, then check permission
     const menuKey = resolveMenuKey(pathname)
     if (menuKey !== null) {
-      if (!canAccessMenu(role, menuKey)) {
+      if (!canAccessMenu(role, menuKey, lokasi)) {
         // Redirect to first allowed route for this role
         router.replace(getDefaultRoute(role))
         return

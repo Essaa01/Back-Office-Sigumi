@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import ThemeToggle from "@/components/ThemeToggle"
 import Image from "next/image"
-import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck } from "lucide-react"
+import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck, Navigation } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { canAccessMenu } from "@/lib/rbac"
@@ -20,6 +20,7 @@ const ALL_MENU_ITEMS = [
   { href: "/cctv",      label: "CCTV Gunung",      icon: Video,            menuKey: "cctv" },
   { href: "/pelaporan", label: "Pelaporan Warga",  icon: MessageSquare,    menuKey: "pelaporan" },
   { href: "/users",     label: "Users",            icon: Users,            menuKey: "users" },
+  { href: "/tracking",  label: "Tracking Pendaki", icon: Navigation,       menuKey: "tracking" },
 ]
 
 // Role display config
@@ -41,7 +42,7 @@ export default function Sidebar() {
 
   // Filter menu items based on role from localStorage
   const menuItems = admin
-    ? ALL_MENU_ITEMS.filter((item) => canAccessMenu(admin.role, item.menuKey))
+    ? ALL_MENU_ITEMS.filter((item) => canAccessMenu(admin.role, item.menuKey, admin.lokasi))
     : []
 
   useEffect(() => {
