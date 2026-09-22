@@ -107,6 +107,11 @@ export default function NewsPage() {
                             <Newspaper className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                         </div>
                     )}
+                    <div className="absolute top-3 left-3 flex gap-1.5 items-center">
+                        <span className="text-[10px] font-semibold px-2 py-1 rounded-md border shadow-xs bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">
+                            {news.lokasi || "Semua Wilayah"}
+                        </span>
+                    </div>
                     <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link href={`/news/${news.id}`} className="p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-md">
                             <Eye className="w-4 h-4" />

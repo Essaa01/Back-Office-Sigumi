@@ -124,7 +124,11 @@ export default function SheltersPage() {
                         <span className="font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
                            <Building className="w-3.5 h-3.5 text-gray-400" /> 
                            {item.name}
-                        </span>
+                        {item.lokasi && (
+                          <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 w-fit">
+                            Wilayah: {item.lokasi}
+                          </span>
+                        )}
                         <span className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 mt-1.5">
                            <MapPin className="w-3 h-3" />
                            <span className="truncate max-w-[200px]">{item.address}</span>

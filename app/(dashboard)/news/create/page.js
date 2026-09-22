@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { isGlobalScope } from "@/lib/utils/auth"
+import { LOCATIONS } from "@/lib/rbac"
 import { newsService } from "@/services/newsService"
 import { uploadImage } from "@/services/uploadService"
 import { toast } from "sonner"
@@ -15,6 +17,12 @@ export default function CreateNews() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [wilayah, setWilayah] = useState("Semua Wilayah")
+  const [isAdminGlobal, setIsAdminGlobal] = useState(false)
+
+  useEffect(() => {
+    setIsAdminGlobal(isGlobalScope())
+  }, [])
 
   const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -52,6 +60,7 @@ export default function CreateNews() {
         title,
         content,
         image_url: imageUrl,
+        lokasi: isAdminGlobal ? (wilayah || "Semua Wilayah") : null,
       })
 
       if (error) throw error
@@ -98,6 +107,29 @@ export default function CreateNews() {
               placeholder="Contoh: Pemkab Salurkan Bantuan Logistik"
             />
           </div>
+
+          {/* Wilayah (Khusus Admin Global / MDMC) */}
+          {isAdminGlobal && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Wilayah Berita
+              </label>
+              <select
+                value={wilayah}
+                onChange={(e) => setWilayah(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="Semua Wilayah">Semua Wilayah</option>
+                {Object.values(LOCATIONS)
+                  .filter(Boolean)
+                  .map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Konten */}
           <div className="space-y-1.5">

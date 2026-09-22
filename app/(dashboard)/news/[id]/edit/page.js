@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { isGlobalScope } from "@/lib/utils/auth"
+import { LOCATIONS } from "@/lib/rbac"
 import { supabase } from "@/lib/supabase/client"
 import { uploadImage } from "@/services/uploadService"
 import { newsService } from "@/services/newsService"
@@ -18,6 +20,8 @@ export default function EditNews() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [wilayah, setWilayah] = useState("Semua Wilayah")
+  const [isAdminGlobal, setIsAdminGlobal] = useState(false)
 
   const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -35,6 +39,8 @@ export default function EditNews() {
         setTitle(data.title)
         setContent(data.content)
         setPreview(data.image_url)
+        setWilayah(data.lokasi || "Semua Wilayah")
+        setIsAdminGlobal(isGlobalScope())
       } catch (err) {
         toast.error("Gagal memuat data berita")
       }
@@ -77,6 +83,7 @@ export default function EditNews() {
         title,
         content,
         image_url: imageUrl,
+        lokasi: isAdminGlobal ? (wilayah || "Semua Wilayah") : undefined,
       })
 
       toast.dismiss(loadingToast)
@@ -120,6 +127,29 @@ export default function EditNews() {
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
             />
           </div>
+
+          {/* Wilayah (Khusus Admin Global / MDMC) */}
+          {isAdminGlobal && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Wilayah Berita
+              </label>
+              <select
+                value={wilayah}
+                onChange={(e) => setWilayah(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="Semua Wilayah">Semua Wilayah</option>
+                {Object.values(LOCATIONS)
+                  .filter(Boolean)
+                  .map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Konten */}
           <div className="space-y-1.5">
