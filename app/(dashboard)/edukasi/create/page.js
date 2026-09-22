@@ -34,7 +34,7 @@ export default function CreateEdukasi() {
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [wilayah, setWilayah] = useState("")
+  const [wilayah, setWilayah] = useState("Semua Wilayah")
   const [isAdminGlobal, setIsAdminGlobal] = useState(false)
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function CreateEdukasi() {
         audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
-        lokasi: isAdminGlobal && wilayah ? wilayah : null,
+        lokasi: isAdminGlobal ? (wilayah || "Semua Wilayah") : null,
       })
 
       if (error) throw error
@@ -175,7 +175,7 @@ export default function CreateEdukasi() {
                 onChange={(e) => setWilayah(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
               >
-                <option value="">Nasional (Semua Wilayah)</option>
+                <option value="Semua Wilayah">Semua Wilayah</option>
                 {Object.values(LOCATIONS)
                   .filter(Boolean)
                   .map((loc) => (

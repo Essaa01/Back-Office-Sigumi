@@ -55,7 +55,7 @@ export default function EditEdukasi() {
         setAudience(data.audience || "Umum")
         setContent(data.content || "")
         setImageUrl(data.image_url || "")
-        setWilayah(data.lokasi || "")
+        setWilayah(data.lokasi || "Semua Wilayah")
         setIsAdminGlobal(isGlobalScope())
       } catch {
         toast.error("Gagal memuat data edukasi")
@@ -83,7 +83,7 @@ export default function EditEdukasi() {
         audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
-        lokasi: isAdminGlobal ? (wilayah || null) : undefined,
+        lokasi: isAdminGlobal ? (wilayah || "Semua Wilayah") : undefined,
       })
 
       toast.dismiss(loadingToast)
@@ -195,7 +195,7 @@ export default function EditEdukasi() {
                 onChange={(e) => setWilayah(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
               >
-                <option value="">Nasional (Semua Wilayah)</option>
+                <option value="Semua Wilayah">Semua Wilayah</option>
                 {Object.values(LOCATIONS)
                   .filter(Boolean)
                   .map((loc) => (
