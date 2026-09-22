@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase/client"
 import { getAdminLocation } from "@/lib/utils/auth"
 
+const ALL_LOCATIONS = ["Yogyakarta", "Bali", "Lombok"]
+
 export const educationService = {
   async getAll() {
     let query = supabase.from("educations").select("*").order("created_at", { ascending: false })
@@ -10,18 +12,51 @@ export const educationService = {
       query = query.eq("lokasi", adminLocation)
     }
 
-    return await query
+    const { data, error } = await query
+    if (error || !data) return { data, error }
+
+    // Deduplicate in Backoffice UI if MDMC (global scope)
+    if (!adminLocation) {
+      const groupedMap = new Map()
+
+      for (const item of data) {
+        const groupKey = `${item.title}_${item.created_at}`
+        if (!groupedMap.has(groupKey)) {
+          groupedMap.set(groupKey, [item])
+        } else {
+          groupedMap.get(groupKey).push(item)
+        }
+      }
+
+      const deduplicated = []
+      for (const [, items] of groupedMap) {
+        if (items.length >= 3) {
+          deduplicated.push({
+            ...items[0],
+            lokasi: "Semua Wilayah",
+            sibling_ids: items.map((i) => i.id),
+          })
+        } else {
+          deduplicated.push(...items)
+        }
+      }
+
+      return { data: deduplicated, error: null }
+    }
+
+    return { data, error: null }
   },
 
   async create(data) {
     const adminLocation = getAdminLocation()
+    const now = new Date().toISOString()
 
     if (data.lokasi === "Semua Wilayah") {
-      const ALL_LOCATIONS = ["Yogyakarta", "Bali", "Lombok"]
       const rows = ALL_LOCATIONS.map((loc) => ({
         ...data,
         lokasi: loc,
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       }))
 
       const result = await supabase.from("educations").insert(rows)
@@ -30,6 +65,7 @@ export const educationService = {
         const fallbackRows = ALL_LOCATIONS.map((loc) => ({
           ...data,
           lokasi: loc,
+          created_at: now,
         }))
         return await supabase.from("educations").insert(fallbackRows)
       }
@@ -40,7 +76,8 @@ export const educationService = {
     const payload = {
       ...data,
       ...(adminLocation && { lokasi: adminLocation }),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     }
 
     const result = await supabase.from("educations").insert([payload])
@@ -49,6 +86,7 @@ export const educationService = {
       const fallbackPayload = {
         ...data,
         ...(adminLocation && { lokasi: adminLocation }),
+        created_at: now,
       }
       return await supabase.from("educations").insert([fallbackPayload])
     }
@@ -65,6 +103,17 @@ export const educationService = {
 
   async delete(id) {
     const adminLocation = getAdminLocation()
+    
+    const { data: item } = await supabase.from("educations").select("title, created_at").eq("id", id).single()
+    
+    if (item && item.title && item.created_at && !adminLocation) {
+      return await supabase
+        .from("educations")
+        .delete()
+        .eq("title", item.title)
+        .eq("created_at", item.created_at)
+    }
+
     let query = supabase.from("educations").delete().eq("id", id)
     if (adminLocation) query = query.eq("lokasi", adminLocation)
     return await query
@@ -72,9 +121,43 @@ export const educationService = {
 
   async update(id, data) {
     const adminLocation = getAdminLocation()
+    const now = new Date().toISOString()
+
+    const { data: targetItem } = await supabase.from("educations").select("title, created_at, lokasi").eq("id", id).single()
+
+    if (targetItem && targetItem.created_at && !adminLocation) {
+      const payload = {
+        ...data,
+        updated_at: now,
+      }
+      
+      if (data.lokasi && data.lokasi !== "Semua Wilayah") {
+        payload.lokasi = data.lokasi
+      } else if (data.lokasi === "Semua Wilayah") {
+        delete payload.lokasi
+      }
+
+      let query = supabase
+        .from("educations")
+        .update(payload)
+        .eq("title", targetItem.title)
+        .eq("created_at", targetItem.created_at)
+
+      const result = await query
+      if (result.error?.message?.includes("updated_at")) {
+        delete payload.updated_at
+        return await supabase
+          .from("educations")
+          .update(payload)
+          .eq("title", targetItem.title)
+          .eq("created_at", targetItem.created_at)
+      }
+      return result
+    }
+
     const payload = {
       ...data,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }
 
     let query = supabase.from("educations").update(payload).eq("id", id)
@@ -83,7 +166,8 @@ export const educationService = {
     const result = await query
 
     if (result.error?.message?.includes("updated_at")) {
-      let fallbackQuery = supabase.from("educations").update(data).eq("id", id)
+      delete payload.updated_at
+      let fallbackQuery = supabase.from("educations").update(payload).eq("id", id)
       if (adminLocation) fallbackQuery = fallbackQuery.eq("lokasi", adminLocation)
       return await fallbackQuery
     }
