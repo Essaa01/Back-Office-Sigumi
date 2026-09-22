@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { isGlobalScope } from "@/lib/utils/auth"
+import { LOCATIONS } from "@/lib/rbac"
 import { educationService } from "@/services/educationService"
 import { uploadMedia } from "@/services/uploadService"
 import { toast } from "sonner"
@@ -34,6 +36,8 @@ export default function EditEdukasi() {
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [wilayah, setWilayah] = useState("")
+  const [isAdminGlobal, setIsAdminGlobal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +55,8 @@ export default function EditEdukasi() {
         setAudience(data.audience || "Umum")
         setContent(data.content || "")
         setImageUrl(data.image_url || "")
+        setWilayah(data.lokasi || "")
+        setIsAdminGlobal(isGlobalScope())
       } catch {
         toast.error("Gagal memuat data edukasi")
       }
@@ -77,6 +83,7 @@ export default function EditEdukasi() {
         audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
+        lokasi: isAdminGlobal ? (wilayah || null) : undefined,
       })
 
       toast.dismiss(loadingToast)
@@ -176,6 +183,29 @@ export default function EditEdukasi() {
               </select>
             </div>
           </div>
+
+          {/* Wilayah (Khusus Admin Global / MDMC) */}
+          {isAdminGlobal && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Wilayah Edukasi
+              </label>
+              <select
+                value={wilayah}
+                onChange={(e) => setWilayah(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="">Nasional (Semua Wilayah)</option>
+                {Object.values(LOCATIONS)
+                  .filter(Boolean)
+                  .map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Konten */}
           <div className="space-y-1.5">
