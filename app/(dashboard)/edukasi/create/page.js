@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { isGlobalScope } from "@/lib/utils/auth"
+import { LOCATIONS } from "@/lib/rbac"
 import { educationService } from "@/services/educationService"
 import { uploadMedia } from "@/services/uploadService"
 import { toast } from "sonner"
@@ -32,6 +34,12 @@ export default function CreateEdukasi() {
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [wilayah, setWilayah] = useState("")
+  const [isAdminGlobal, setIsAdminGlobal] = useState(false)
+
+  useEffect(() => {
+    setIsAdminGlobal(isGlobalScope())
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -52,6 +60,7 @@ export default function CreateEdukasi() {
         audience: audience || "Umum",
         content,
         image_url: finalImageUrl || null,
+        lokasi: isAdminGlobal && wilayah ? wilayah : null,
       })
 
       if (error) throw error
@@ -154,6 +163,29 @@ export default function CreateEdukasi() {
               </select>
             </div>
           </div>
+
+          {/* Wilayah (Khusus Admin Global / MDMC) */}
+          {isAdminGlobal && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Wilayah Edukasi
+              </label>
+              <select
+                value={wilayah}
+                onChange={(e) => setWilayah(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+              >
+                <option value="">Nasional (Semua Wilayah)</option>
+                {Object.values(LOCATIONS)
+                  .filter(Boolean)
+                  .map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Konten */}
           <div className="space-y-1.5">

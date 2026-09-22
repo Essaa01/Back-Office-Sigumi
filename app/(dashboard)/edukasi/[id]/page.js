@@ -110,6 +110,9 @@ export default function DetailEdukasi() {
                 {edukasi.category}
               </span>
             )}
+            <span className="px-2.5 py-1 rounded-md border font-semibold bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">
+              Wilayah: {edukasi.lokasi || "Nasional"}
+            </span>
             {edukasi.created_at && (
               <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-2.5 py-1 rounded-md border border-gray-200 dark:border-white/5">
                 <Calendar className="w-3.5 h-3.5" />
