@@ -15,6 +15,27 @@ export const educationService = {
 
   async create(data) {
     const adminLocation = getAdminLocation()
+
+    if (data.lokasi === "Semua Wilayah") {
+      const ALL_LOCATIONS = ["Yogyakarta", "Bali", "Lombok"]
+      const rows = ALL_LOCATIONS.map((loc) => ({
+        ...data,
+        lokasi: loc,
+        updated_at: new Date().toISOString(),
+      }))
+
+      const result = await supabase.from("educations").insert(rows)
+
+      if (result.error?.message?.includes("updated_at")) {
+        const fallbackRows = ALL_LOCATIONS.map((loc) => ({
+          ...data,
+          lokasi: loc,
+        }))
+        return await supabase.from("educations").insert(fallbackRows)
+      }
+
+      return result
+    }
     
     const payload = {
       ...data,
