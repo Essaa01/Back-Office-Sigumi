@@ -235,6 +235,9 @@ export default function EdukasiPage() {
                       {item.category}
                     </span>
                   )}
+                  <span className="text-[10px] font-semibold px-2 py-1 rounded-md border shadow-xs bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">
+                    {item.lokasi || "Semua Wilayah"}
+                  </span>
                 </div>
                 {/* Action Buttons */}
                 <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
