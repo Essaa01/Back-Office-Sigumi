@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { shelterService } from "@/services/shelterService"
-import { getAdminLocation, isGlobalScope } from "@/lib/utils/auth"
-import { LOCATIONS } from "@/lib/rbac"
+import { getAdminLocation } from "@/lib/utils/auth"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ArrowLeft, Save, MapPin as MapPinIcon, ExternalLink } from "lucide-react"
@@ -38,11 +37,6 @@ export default function CreateShelterPage() {
   })
 
   const [volcanoes, setVolcanoes] = useState([])
-  const [isAdminGlobal, setIsAdminGlobal] = useState(false)
-
-  useEffect(() => {
-    setIsAdminGlobal(isGlobalScope())
-  }, [])
 
   useEffect(() => {
     const fetchVolcanoes = async () => {
@@ -187,30 +181,6 @@ export default function CreateShelterPage() {
                 ))}
                 </select>
             </div>
-
-            {/* Field Wilayah (Khusus Admin Global / MDMC) */}
-            {isAdminGlobal && (
-              <div className="space-y-1.5 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Wilayah Shelters
-                </label>
-                <select
-                  name="lokasi"
-                  value={formData.lokasi || ""}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-                >
-                  <option value="">Otomatis dari Lokus Gunung</option>
-                  {Object.values(LOCATIONS)
-                    .filter(Boolean)
-                    .map((loc) => (
-                      <option key={loc} value={loc}>
-                        {loc}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
 
             {/* Field Capacity */}
             <div className="space-y-1.5">

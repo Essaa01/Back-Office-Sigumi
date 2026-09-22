@@ -29,7 +29,7 @@ export const shelterService = {
 
     const { lat, lng, ...rest } = data
     const locationWkt = (lat && lng) ? `POINT(${lng} ${lat})` : null
-    const determinedRegion = data.lokasi || volcanoConfigs[data.volcano_id] || adminLocation
+    const determinedRegion = volcanoConfigs[data.volcano_id] || adminLocation
 
     const payload = {
       ...rest,
