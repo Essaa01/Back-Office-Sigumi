@@ -44,8 +44,10 @@ export default function LoginPage() {
 
       toast.success(`Selamat Datang Admin!`)
       // Redirect berdasarkan role:
-      // Dinas Pariwisata → /tourism, lainnya → /menu
-      const defaultRoute = data.role === "Dinas Pariwisata" ? "/tourism" : "/menu"
+      // Dinas Pariwisata → /tourism, Admin Pengelola → /admin-management, lainnya → /menu
+      let defaultRoute = "/menu"
+      if (data.role === "Dinas Pariwisata") defaultRoute = "/tourism"
+      else if (data.role === "Admin Pengelola") defaultRoute = "/admin-management"
       router.push(defaultRoute)
     } catch (err) {
       toast.error("Terjadi kesalahan saat memproses login")

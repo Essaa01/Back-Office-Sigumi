@@ -137,7 +137,7 @@ export default function DetailEdukasi() {
           </h1>
 
           {/* Prose */}
-          <div 
+          <div
             className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-loose text-base md:text-[1.05rem]"
             dangerouslySetInnerHTML={{ __html: edukasi.content }}
           />

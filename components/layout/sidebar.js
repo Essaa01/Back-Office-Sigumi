@@ -5,22 +5,23 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import ThemeToggle from "@/components/ThemeToggle"
 import Image from "next/image"
-import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck, Navigation } from "lucide-react"
+import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck, Navigation, UserCog } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { canAccessMenu } from "@/lib/rbac"
 
 // All possible menu items — each has a `menuKey` matching MENU_KEYS in lib/rbac.js
 const ALL_MENU_ITEMS = [
-  { href: "/menu",      label: "Menu Utama",       icon: LayoutDashboard, menuKey: "menu" },
-  { href: "/news",      label: "News",             icon: Newspaper,        menuKey: "news" },
-  { href: "/edukasi",   label: "Edukasi",          icon: BookOpen,         menuKey: "edukasi" },
-  { href: "/shelters",  label: "Titik Evakuasi",   icon: Tent,             menuKey: "shelters" },
-  { href: "/tourism",   label: "Wisata",           icon: Map,              menuKey: "tourism" },
-  { href: "/cctv",      label: "CCTV Gunung",      icon: Video,            menuKey: "cctv" },
-  { href: "/pelaporan", label: "Pelaporan Warga",  icon: MessageSquare,    menuKey: "pelaporan" },
-  { href: "/users",     label: "Users",            icon: Users,            menuKey: "users" },
-  { href: "/tracking",  label: "Tracking Pendaki", icon: Navigation,       menuKey: "tracking" },
+  { href: "/menu",              label: "Menu Utama",       icon: LayoutDashboard, menuKey: "menu" },
+  { href: "/news",              label: "News",             icon: Newspaper,        menuKey: "news" },
+  { href: "/edukasi",           label: "Edukasi",          icon: BookOpen,         menuKey: "edukasi" },
+  { href: "/shelters",          label: "Titik Evakuasi",   icon: Tent,             menuKey: "shelters" },
+  { href: "/tourism",           label: "Wisata",           icon: Map,              menuKey: "tourism" },
+  { href: "/cctv",              label: "CCTV Gunung",      icon: Video,            menuKey: "cctv" },
+  { href: "/pelaporan",         label: "Pelaporan Warga",  icon: MessageSquare,    menuKey: "pelaporan" },
+  { href: "/users",             label: "Users",            icon: Users,            menuKey: "users" },
+  { href: "/tracking",          label: "Tracking Pendaki", icon: Navigation,       menuKey: "tracking" },
+  { href: "/admin-management",  label: "Admin Management", icon: UserCog,          menuKey: "admin-management" },
 ]
 
 // Role display config
@@ -28,6 +29,7 @@ const ROLE_BADGE_STYLE = {
   "BPBD":             { label: "BPBD",             color: "text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 border-orange-100 dark:border-orange-500/20" },
   "MDMC":             { label: "MDMC",             color: "text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 border-purple-100 dark:border-purple-500/20" },
   "Dinas Pariwisata": { label: "Dinas Pariwisata", color: "text-green-700  dark:text-green-400  bg-green-50  dark:bg-green-500/10  border-green-100  dark:border-green-500/20" },
+  "Admin Pengelola":  { label: "Admin Pengelola",  color: "text-blue-700   dark:text-blue-400   bg-blue-50   dark:bg-blue-500/10   border-blue-100   dark:border-blue-500/20" },
 }
 
 export default function Sidebar() {
