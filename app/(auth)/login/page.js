@@ -31,7 +31,7 @@ export default function LoginPage() {
       }
 
       // Login sukses
-      // Simpan data admin (termasuk role) ke localStorage
+      // Simpan data admin (termasuk role) dan timestamp aktivitas ke localStorage
       localStorage.setItem(
         "adminData",
         JSON.stringify({
@@ -41,6 +41,7 @@ export default function LoginPage() {
           role: data.role,
         })
       )
+      localStorage.setItem("lastActivity", Date.now().toString())
 
       toast.success(`Selamat Datang Admin!`)
       // Redirect berdasarkan role:

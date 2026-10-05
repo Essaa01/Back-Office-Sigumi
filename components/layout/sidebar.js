@@ -57,6 +57,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem("adminData")
+    localStorage.removeItem("lastActivity")
     toast.success("Berhasil keluar dari sesi admin")
     router.replace("/login")
   }
