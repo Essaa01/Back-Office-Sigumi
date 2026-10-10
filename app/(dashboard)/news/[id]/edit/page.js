@@ -9,7 +9,8 @@ import { uploadImage } from "@/services/uploadService"
 import { newsService } from "@/services/newsService"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft, Save, ImagePlus, UserCog } from "lucide-react"
+import { ArrowLeft, Save, ImagePlus, UserCog, Loader2 } from "lucide-react"
+import RichTextEditor from "@/components/RichTextEditor"
 
 export default function EditNews() {
   const { id } = useParams()
@@ -20,6 +21,7 @@ export default function EditNews() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
   const [wilayah, setWilayah] = useState("Semua Wilayah")
   const [isAdminGlobal, setIsAdminGlobal] = useState(false)
 
@@ -28,6 +30,7 @@ export default function EditNews() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setFetching(true)
         const { data, error } = await newsService.getById(id)
 
         if (error || !data) {
@@ -36,13 +39,15 @@ export default function EditNews() {
           return
         }
 
-        setTitle(data.title)
-        setContent(data.content)
+        setTitle(data.title || "")
+        setContent(data.content || "")
         setPreview(data.image_url)
         setWilayah(data.lokasi || "Semua Wilayah")
         setIsAdminGlobal(isGlobalScope())
       } catch (err) {
         toast.error("Gagal memuat data berita")
+      } finally {
+        setFetching(false)
       }
     }
 
@@ -69,6 +74,11 @@ export default function EditNews() {
 
   const handleUpdate = async (e) => {
     e.preventDefault()
+
+    if (!content || !content.trim()) {
+      toast.error("Isi konten berita tidak boleh kosong")
+      return
+    }
 
     try {
       setLoading(true)
@@ -99,6 +109,14 @@ export default function EditNews() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -153,15 +171,13 @@ export default function EditNews() {
 
           {/* Konten */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Isi Konten Berita
             </label>
-            <textarea
-              required
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm resize-none"
-              rows={8}
+              onChange={setContent}
+              placeholder="Tuliskan detail berita lengkap di sini..."
             />
           </div>
 

@@ -9,6 +9,7 @@ import { uploadImage } from "@/services/uploadService"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ArrowLeft, Save, ImagePlus } from "lucide-react"
+import RichTextEditor from "@/components/RichTextEditor"
 
 export default function CreateNews() {
   const router = useRouter()
@@ -46,6 +47,11 @@ export default function CreateNews() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!content || !content.trim()) {
+      toast.error("Isi konten berita tidak boleh kosong")
+      return
+    }
 
     try {
       setLoading(true)
@@ -133,15 +139,12 @@ export default function CreateNews() {
 
           {/* Konten */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Isi Konten Berita
             </label>
-            <textarea
-              required
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm resize-none"
-              rows={8}
+              onChange={setContent}
               placeholder="Tuliskan detail berita lengkap di sini..."
             />
           </div>

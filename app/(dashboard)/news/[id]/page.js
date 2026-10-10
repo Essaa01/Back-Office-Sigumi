@@ -100,9 +100,16 @@ export default function DetailNews() {
 
             {/* Prose */}
             <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+              {news.content && /<[a-z][\s\S]*>/i.test(news.content) ? (
+                <div
+                  className="leading-loose text-base md:text-[1.05rem]"
+                  dangerouslySetInnerHTML={{ __html: news.content }}
+                />
+              ) : (
                 <p className="whitespace-pre-line leading-loose text-base md:text-[1.05rem]">
-                    {news.content}
+                  {news.content}
                 </p>
+              )}
             </div>
         </div>
 

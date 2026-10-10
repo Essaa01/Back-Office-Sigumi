@@ -8,7 +8,7 @@ import { educationService } from "@/services/educationService"
 import { uploadMedia } from "@/services/uploadService"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import RichTextEditor from "@/components/RichTextEditor"
 import SimpleImagePicker from "@/components/edukasi/SimpleImagePicker"
 
@@ -36,12 +36,14 @@ export default function EditEdukasi() {
   const [imageUrl, setImageUrl] = useState("")
   const [pendingFile, setPendingFile] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
   const [wilayah, setWilayah] = useState("")
   const [isAdminGlobal, setIsAdminGlobal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setFetching(true)
         const { data, error } = await educationService.getById(id)
 
         if (error || !data) {
@@ -59,6 +61,8 @@ export default function EditEdukasi() {
         setIsAdminGlobal(isGlobalScope())
       } catch {
         toast.error("Gagal memuat data edukasi")
+      } finally {
+        setFetching(false)
       }
     }
 
@@ -67,6 +71,11 @@ export default function EditEdukasi() {
 
   const handleUpdate = async (e) => {
     e.preventDefault()
+
+    if (!content || !content.trim()) {
+      toast.error("Isi konten edukasi tidak boleh kosong")
+      return
+    }
 
     try {
       setLoading(true)
@@ -98,6 +107,14 @@ export default function EditEdukasi() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    )
   }
 
   return (
