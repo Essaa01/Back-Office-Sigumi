@@ -7,7 +7,7 @@ import { uploadImage } from "@/services/uploadService"
 import { getAdminLocation } from "@/lib/utils/auth"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft, Save, MapPin, ImagePlus, ExternalLink } from "lucide-react"
+import { ArrowLeft, Save, MapPin, ImagePlus, ExternalLink, Star } from "lucide-react"
 
 export default function CreateTourismPage() {
   const router = useRouter()
@@ -21,7 +21,7 @@ export default function CreateTourismPage() {
     address: "",
     entry_fee: "",
     open_hours: "08:00 - 17:00",
-    rating: "4.5",
+    rating: "",
     gmaps_url: ""
   })
   const adminLocation = getAdminLocation()
@@ -66,11 +66,17 @@ export default function CreateTourismPage() {
         imageUrl = await uploadImage(file)
       }
 
+      let parsedRating = 0.0
+      if (formData.rating !== "" && formData.rating !== null && formData.rating !== undefined) {
+        parsedRating = Math.min(5, Math.max(0, parseFloat(formData.rating)))
+        if (isNaN(parsedRating)) parsedRating = 0.0
+      }
+
       const dataToSave = {
         ...formData,
         photo_url: imageUrl,
         entry_fee: formData.entry_fee ? parseInt(formData.entry_fee) : 0,
-        rating: formData.rating ? parseFloat(formData.rating) : 0.0
+        rating: parsedRating
       }
       
       const { error } = await tourismService.create(dataToSave)
@@ -169,6 +175,43 @@ export default function CreateTourismPage() {
                 placeholder="09:00 - 18:00"
                 />
             </div>
+
+            {/* Field Rating */}
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    Rating Destinasi (0.0 - 5.0)
+                </label>
+                <input 
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                name="rating"
+                value={formData.rating}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+                placeholder="Contoh: 4.5"
+                />
+                <p className="text-[10px] text-gray-400">Skor ulasan destinasi dari skala 0.0 sampai 5.0.</p>
+            </div>
+
+            {/* Field Google Maps Link */}
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
+                    Link Google Maps
+                </label>
+                <input 
+                name="gmaps_url"
+                value={formData.gmaps_url}
+                onChange={handleChange}
+                type="url"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+                placeholder="https://maps.google.com/... atau https://goo.gl/maps/..."
+                />
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">Paste link dari Google Maps untuk navigasi pengguna.</p>
+            </div>
             
             {/* Field Photo Upload */}
             <div className="space-y-1.5 md:col-span-2">
@@ -211,23 +254,6 @@ export default function CreateTourismPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm resize-none"
                 placeholder="Nama jalan, kecamatan, ds..."
                 />
-            </div>
-
-            {/* Field Google Maps Link */}
-            <div className="space-y-1.5 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
-                    Link Google Maps
-                </label>
-                <input 
-                name="gmaps_url"
-                value={formData.gmaps_url}
-                onChange={handleChange}
-                type="url"
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-                placeholder="https://maps.google.com/... atau https://goo.gl/maps/..."
-                />
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">Paste link dari Google Maps agar pengguna mobile app bisa navigasi langsung.</p>
             </div>
 
             {/* Field Description */}

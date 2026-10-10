@@ -7,7 +7,7 @@ import { uploadImage } from "@/services/uploadService"
 import { getAdminLocation } from "@/lib/utils/auth"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft, Save, MapPin, ImagePlus, ExternalLink, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, MapPin, ImagePlus, ExternalLink, Loader2, Star } from "lucide-react"
 
 export default function EditTourismPage() {
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function EditTourismPage() {
     address: "",
     entry_fee: "",
     open_hours: "08:00 - 17:00",
-    rating: "4.5",
+    rating: "",
     gmaps_url: "",
     photo_url: null
   })
@@ -41,7 +41,7 @@ export default function EditTourismPage() {
         setFormData({
           ...data,
           entry_fee: data.entry_fee?.toString() || "",
-          rating: data.rating?.toString() || "4.5",
+          rating: data.rating !== null && data.rating !== undefined ? data.rating.toString() : "",
           gmaps_url: data.gmaps_url || ""
         })
         if (data.photo_url) {
@@ -95,11 +95,17 @@ export default function EditTourismPage() {
         imageUrl = await uploadImage(file)
       }
 
+      let parsedRating = 0.0
+      if (formData.rating !== "" && formData.rating !== null && formData.rating !== undefined) {
+        parsedRating = Math.min(5, Math.max(0, parseFloat(formData.rating)))
+        if (isNaN(parsedRating)) parsedRating = 0.0
+      }
+
       const dataToSave = {
         ...formData,
         photo_url: imageUrl,
         entry_fee: formData.entry_fee ? parseInt(formData.entry_fee) : 0,
-        rating: formData.rating ? parseFloat(formData.rating) : 0.0
+        rating: parsedRating
       }
       
       const { error } = await tourismService.update(params.id, dataToSave)
@@ -204,6 +210,26 @@ export default function EditTourismPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
                 placeholder="09:00 - 18:00"
                 />
+            </div>
+
+            {/* Field Rating */}
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    Rating Destinasi (0.0 - 5.0)
+                </label>
+                <input 
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                name="rating"
+                value={formData.rating}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
+                placeholder="Contoh: 4.5"
+                />
+                <p className="text-[10px] text-gray-400">Skor ulasan destinasi dari skala 0.0 sampai 5.0.</p>
             </div>
             
             {/* Field Photo Upload */}
