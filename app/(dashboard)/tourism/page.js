@@ -9,13 +9,9 @@ import { Plus, Trash2, Edit, MapPin, Clock, Star, Map, Camera, ExternalLink } fr
 const ITEMS_PER_PAGE = 10
 
 const getImageSrc = (url) => {
+  if (!url) return null
   try {
-    const imageUrl = new URL(url)
-    imageUrl.pathname = imageUrl.pathname
-      .split("/")
-      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
-      .join("/")
-    return imageUrl.toString()
+    return new URL(url).toString()
   } catch {
     return url
   }
@@ -101,7 +97,6 @@ export default function TourismPage() {
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
             <thead className="bg-gray-50/50 dark:bg-white/5 border-b border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 font-medium tracking-wide">
               <tr>
-                <th className="px-6 py-4 w-12"></th>
                 <th className="px-6 py-4">Destinasi</th>
                 <th className="px-6 py-4">Kategori & Lokasi</th>
                 <th className="px-6 py-4">Informasi Tambahan</th>
@@ -112,7 +107,7 @@ export default function TourismPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-white/10">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan="4" className="px-6 py-12 text-center text-gray-400">
                     <div className="inline-flex items-center gap-2">
                        <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
                        Memuat data...
@@ -121,7 +116,7 @@ export default function TourismPage() {
                 </tr>
               ) : paginatedDestinations.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-16 text-center">
+                  <td colSpan="4" className="px-6 py-16 text-center">
                     <p className="text-gray-500 dark:text-gray-400 font-medium">Belum ada destinasi terdaftar</p>
                     <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Gunakan tombol "Tambah Destinasi" untuk mendaftar baru.</p>
                   </td>
@@ -130,36 +125,45 @@ export default function TourismPage() {
                 paginatedDestinations.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors group relative">
                     
-                    {/* Thumbnail */}
-                    <td className="px-6 py-4 whitespace-nowrap pl-6">
-                        {item.photo_url ? (
-                            <img src={getImageSrc(item.photo_url)} alt={item.name} className="w-10 h-10 rounded object-cover shadow-sm border border-gray-200 dark:border-white/10" />
-                        ) : (
-                            <div className="w-10 h-10 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center border border-gray-200 dark:border-white/10">
-                                <Camera className="w-4 h-4 text-gray-400" />
-                            </div>
-                        )}
-                    </td>
-
-                    {/* Name & Desc */}
+                    {/* Destination (Cover Thumbnail + Info) */}
                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                        <div className="flex flex-col gap-1 max-w-[240px]">
-                            <span className="truncate">{item.name}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 font-normal truncate">
-                                {item.description || 'Tidak ada deskripsi rinci.'}
-                            </span>
-                            {item.gmaps_url && (
-                              <a 
-                                href={item.gmaps_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium mt-0.5 transition-colors"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                                Buka di Google Maps
-                              </a>
-                            )}
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 min-w-[48px] rounded-lg overflow-hidden shrink-0 border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 flex items-center justify-center shadow-xs">
+                          {item.photo_url?.trim() ? (
+                            <img
+                              src={getImageSrc(item.photo_url)}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none"
+                                const fallback = e.currentTarget.parentElement?.querySelector(".fallback-icon")
+                                if (fallback) fallback.classList.remove("hidden")
+                              }}
+                            />
+                          ) : null}
+                          <div className={`fallback-icon w-full h-full flex items-center justify-center ${item.photo_url?.trim() ? "hidden" : ""}`}>
+                            <Camera className="w-5 h-5 text-gray-400" />
+                          </div>
                         </div>
+
+                        <div className="flex flex-col gap-1 max-w-[240px]">
+                          <span className="truncate">{item.name}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-normal truncate">
+                            {item.description || "Tidak ada deskripsi rinci."}
+                          </span>
+                          {item.gmaps_url && (
+                            <a 
+                              href={item.gmaps_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium mt-0.5 transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Buka di Google Maps
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Category & Region */}

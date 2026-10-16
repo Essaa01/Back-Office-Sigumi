@@ -92,7 +92,14 @@ export default function EditTourismPage() {
 
       let imageUrl = formData.photo_url
       if (file) {
-        imageUrl = await uploadImage(file)
+        try {
+          imageUrl = await uploadImage(file)
+          if (!imageUrl) throw new Error("URL gambar kosong setelah upload")
+        } catch (uploadErr) {
+          toast.dismiss(loadingToast)
+          toast.error(`Gagal mengunggah gambar: ${uploadErr.message}`)
+          return
+        }
       }
 
       let parsedRating = 0.0
