@@ -6,8 +6,9 @@ import { shelterService } from "@/services/shelterService"
 import { getAdminLocation } from "@/lib/utils/auth"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft, Save, MapPin as MapPinIcon, ExternalLink } from "lucide-react"
+import { ArrowLeft, Save, MapPin as MapPinIcon, ExternalLink, FileSpreadsheet } from "lucide-react"
 import dynamic from "next/dynamic"
+import ShelterImportModal from "@/components/shelters/ShelterImportModal"
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { 
   ssr: false,
@@ -17,6 +18,7 @@ const MapPicker = dynamic(() => import("@/components/MapPicker"), {
 export default function CreateShelterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     type: "posko_evakuasi",
@@ -116,13 +118,24 @@ export default function CreateShelterPage() {
 
   return (
     <div className="min-h-screen p-6 md:p-10 max-w-4xl mx-auto font-sans">
-      <div className="mb-8">
-        <Link href="/shelters" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white font-medium transition-colors mb-6">
-          <ArrowLeft className="w-4 h-4" />
-          Kembali
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Form Data Evakuasi</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Lengkapi informasi di bawah untuk menambahkan lokasi operasional baru.</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <Link href="/shelters" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white font-medium transition-colors mb-4">
+            <ArrowLeft className="w-4 h-4" />
+            Kembali
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Form Data Evakuasi</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Lengkapi informasi di bawah untuk menambahkan lokasi operasional baru.</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsImportModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-white dark:bg-[#1a1a2e] hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/10 font-medium text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm cursor-pointer self-start sm:self-auto"
+        >
+          <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          Upload CSV / Excel
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a1a2e] rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
@@ -347,6 +360,15 @@ export default function CreateShelterPage() {
         </div>
 
       </form>
+
+      <ShelterImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          router.push("/shelters")
+          router.refresh()
+        }}
+      />
     </div>
   )
 }

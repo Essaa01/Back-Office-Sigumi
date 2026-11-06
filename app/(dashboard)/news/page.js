@@ -8,6 +8,11 @@ import { Plus, Newspaper, Calendar, Trash2, Edit, ChevronLeft, ChevronRight, Eye
 
 const ITEMS_PER_PAGE = 6
 
+const stripHtml = (html) => {
+  if (!html) return ""
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim()
+}
+
 export default function NewsPage() {
   const [newsList, setNewsList] = useState([])
   const [loading, setLoading] = useState(false)
@@ -131,7 +136,7 @@ export default function NewsPage() {
                           {news.title}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 flex-1 mb-4">
-                          {news.content}
+                          {stripHtml(news.content)}
                       </p>
                       
                       {/* Meta Footer */}

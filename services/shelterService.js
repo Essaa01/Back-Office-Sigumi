@@ -53,6 +53,43 @@ export const shelterService = {
     return result
   },
 
+  async createBatch(items) {
+    const adminLocation = getAdminLocation()
+    const volcanoConfigs = {
+      "a1b2c3d4-e5f6-7890-abcd-111111111111": "Yogyakarta",
+      "a1b2c3d4-e5f6-7890-abcd-222222222222": "Bali",
+      "a1b2c3d4-e5f6-7890-abcd-333333333333": "Lombok",
+    }
+
+    const payloads = items.map((data) => {
+      const { lat, lng, ...rest } = data
+      const locationWkt = (lat && lng) ? `POINT(${lng} ${lat})` : null
+      const determinedRegion = volcanoConfigs[data.volcano_id] || adminLocation
+
+      return {
+        ...rest,
+        location: locationWkt,
+        lokasi: determinedRegion,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    })
+
+    const result = await supabase.from("shelters").insert(payloads)
+
+    if (result.error?.message?.includes("updated_at") || result.error?.message?.includes("created_at")) {
+      const fallbackPayloads = payloads.map((item) => {
+        const copy = { ...item }
+        delete copy.created_at
+        delete copy.updated_at
+        return copy
+      })
+      return await supabase.from("shelters").insert(fallbackPayloads)
+    }
+
+    return result
+  },
+
   async delete(id) {
     const adminLocation = getAdminLocation()
     let query = supabase.from("shelters").delete().eq("id", id)

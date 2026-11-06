@@ -9,6 +9,7 @@ import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, Log
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { canAccessMenu } from "@/lib/rbac"
+import { clearAdminSession } from "@/lib/utils/auth"
 
 // All possible menu items — each has a `menuKey` matching MENU_KEYS in lib/rbac.js
 const ALL_MENU_ITEMS = [
@@ -39,6 +40,7 @@ export default function Sidebar() {
 
   // Modal State
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -56,8 +58,8 @@ export default function Sidebar() {
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("adminData")
-    localStorage.removeItem("lastActivity")
+    setIsLogoutConfirmOpen(false)
+    clearAdminSession()
     toast.success("Berhasil keluar dari sesi admin")
     router.replace("/login")
   }
@@ -185,8 +187,8 @@ export default function Sidebar() {
               <ThemeToggle compact />
             </div>
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-2 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors group"
+              onClick={() => setIsLogoutConfirmOpen(true)}
+              className="w-full flex items-center gap-3 px-2 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors group cursor-pointer"
             >
               <LogOut size={16} className="transition-transform group-hover:-translate-x-0.5" />
               <span>Keluar</span>
@@ -279,6 +281,46 @@ export default function Sidebar() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Logout Confirmation Modal */}
+      {isLogoutConfirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsLogoutConfirmOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#1e1e2d] rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-100 dark:border-white/10 p-6 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-4 ring-8 ring-red-50 dark:ring-red-500/5">
+                <LogOut className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                Konfirmasi Keluar
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+                Apakah Anda yakin ingin keluar dari sesi admin? Anda harus login kembali untuk mengakses panel admin.
+              </p>
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  type="button"
+                  onClick={() => setIsLogoutConfirmOpen(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 active:scale-[0.98] rounded-xl shadow-md shadow-red-600/20 transition-all cursor-pointer"
+                >
+                  Ya, Keluar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

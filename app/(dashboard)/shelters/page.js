@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { shelterService } from "@/services/shelterService"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Plus, Trash2, Edit, Building, MapPin, Users, Activity, Phone, ExternalLink } from "lucide-react"
+import { Plus, Trash2, Edit, Building, MapPin, Users, Activity, Phone, ExternalLink, FileSpreadsheet } from "lucide-react"
+import ShelterImportModal from "@/components/shelters/ShelterImportModal"
 
 const ITEMS_PER_PAGE = 10
 
@@ -12,6 +13,7 @@ export default function SheltersPage() {
   const [shelters, setShelters] = useState([])
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
   const TYPE_STYLES = {
     puskesmas: { label: "Puskesmas", bg: "bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20" },
@@ -75,13 +77,24 @@ export default function SheltersPage() {
           </p>
         </div>
 
-        <Link
-          href="/shelters/create"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors focus:ring-4 focus:ring-blue-500/20"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Lokasi
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-white dark:bg-[#1a1a2e] hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/10 font-medium text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            Upload CSV / Excel
+          </button>
+
+          <Link
+            href="/shelters/create"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors focus:ring-4 focus:ring-blue-500/20"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Lokasi
+          </Link>
+        </div>
       </div>
 
       {/* Table Section */}
@@ -230,6 +243,12 @@ export default function SheltersPage() {
           </div>
         )}
       </div>
+
+      <ShelterImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={fetchData}
+      />
     </div>
   )
 }
