@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { canAdminManageSos } from "@/lib/utils/sos"
 
+const DEFAULT_SUPABASE_URL = "http://187.53.141.200:8000"
+const DEFAULT_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0d2FudGVlY3J2eWR4eXJncGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzU2NTQsImV4cCI6MjA5MDgxMTY1NH0.ofz33s1PLvEGu_rgnu1CTXt_IUKOi0Ppni_8rvCxKrU"
+
 /**
  * Server-side Supabase client.
  * Uses SUPABASE_SERVICE_ROLE_KEY if configured in server environment;
@@ -9,8 +13,14 @@ import { canAdminManageSos } from "@/lib/utils/sos"
  * Service role key is NEVER sent to the browser or frontend bundle.
  */
 function getServerSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url =
+    process.env.INTERNAL_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    DEFAULT_SUPABASE_URL
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_ANON_KEY
   return createClient(url, serviceKey, {
     auth: { persistSession: false },
   })

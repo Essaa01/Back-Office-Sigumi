@@ -3,16 +3,25 @@ import { createClient } from "@supabase/supabase-js"
 
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 
+const DEFAULT_SUPABASE_URL = "http://187.53.141.200:8000"
+const DEFAULT_STORAGE_SUPABASE_URL = "https://rtwanteecrvydxyrgpii.supabase.co"
+const DEFAULT_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0d2FudGVlY3J2eWR4eXJncGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzU2NTQsImV4cCI6MjA5MDgxMTY1NH0.ofz33s1PLvEGu_rgnu1CTXt_IUKOi0Ppni_8rvCxKrU"
+
 function getClients() {
   const urls = [
+    process.env.INTERNAL_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_URL,
+    DEFAULT_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL,
+    DEFAULT_STORAGE_SUPABASE_URL,
   ].filter(Boolean)
 
   const uniqueUrls = [...new Set(urls)]
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_ANON_KEY
 
   return uniqueUrls.map((url) =>
     createClient(url, key, {
@@ -37,6 +46,7 @@ export async function POST(request) {
     const clients = getClients()
     let matchedAdmin = null
     let lastError = null
+    let querySucceeded = false
 
     for (const client of clients) {
       try {
@@ -52,6 +62,8 @@ export async function POST(request) {
           continue
         }
 
+        querySucceeded = true
+
         if (Array.isArray(data) && data.length > 0) {
           matchedAdmin = data[0]
           break
@@ -62,8 +74,12 @@ export async function POST(request) {
     }
 
     if (!matchedAdmin) {
-      if (lastError) {
+      if (!querySucceeded && lastError) {
         console.error("Login Supabase query error:", lastError)
+        return NextResponse.json(
+          { error: "Gagal terhubung ke server autentikasi" },
+          { status: 503 }
+        )
       }
       return NextResponse.json(
         { error: "Email atau password yang Anda masukkan salah" },
