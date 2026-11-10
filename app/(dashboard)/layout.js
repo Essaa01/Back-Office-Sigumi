@@ -4,13 +4,14 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Sidebar from "@/components/layout/sidebar"
 import { Loader2 } from "lucide-react"
-import { resolveMenuKey, getDefaultRoute, canAccessMenu } from "@/lib/rbac"
+import { resolveMenuKey, canAccessMenu } from "@/lib/rbac"
 import { toast } from "sonner"
 import {
   SESSION_TIMEOUT_MS,
   clearAdminSession,
   getLastActivity,
   updateLastActivity,
+  validateAdminSession,
 } from "@/lib/utils/auth"
 
 export default function Layout({ children }) {
@@ -18,69 +19,58 @@ export default function Layout({ children }) {
   const pathname = usePathname()
   const [isAuthorized, setIsAuthorized] = useState(false)
   const lastUpdateRef = useRef(0)
+  const historyGuardInitializedRef = useRef(false)
 
   // Logout due to session timeout
   const handleSessionTimeout = useCallback(() => {
+    setIsAuthorized(false)
     clearAdminSession()
     toast.error("Sesi telah berakhir karena tidak ada aktivitas selama 1 jam. Silakan login kembali.")
-    router.replace("/login")
-  }, [router])
+    window.location.replace("/login")
+  }, [])
 
-  useEffect(() => {
-    const raw = localStorage.getItem("adminData")
+  // Verify session and route access
+  const verifyAccess = useCallback(() => {
+    const { valid, expired, admin, defaultRoute } = validateAdminSession()
 
-    if (!raw) {
-      router.replace("/login")
-      return
-    }
-
-    let adminData
-    try {
-      adminData = JSON.parse(raw)
-    } catch {
-      router.replace("/login")
-      return
-    }
-
-    const role = adminData?.role
-    const lokasi = adminData?.lokasi
-    if (!role) {
-      // Legacy session without role — force re-login
-      clearAdminSession()
-      router.replace("/login")
-      return
-    }
-
-    // Check if session has timed out (1 hour idle)
-    const last = getLastActivity()
-    if (last) {
-      if (Date.now() - last > SESSION_TIMEOUT_MS) {
-        handleSessionTimeout()
-        return
+    if (!valid || !admin) {
+      setIsAuthorized(false)
+      if (expired) {
+        toast.error("Sesi telah berakhir karena tidak ada aktivitas selama 1 jam. Silakan login kembali.")
       }
-    } else {
-      // Initialize if missing
-      updateLastActivity()
+      window.location.replace("/login")
+      return false
     }
+
+    const { role, lokasi } = admin
 
     // Route guard: resolve current path to a menu key, then check permission
     const menuKey = resolveMenuKey(pathname)
-    if (menuKey !== null) {
-      if (!canAccessMenu(role, menuKey, lokasi)) {
-        // Redirect to first allowed route for this role
-        router.replace(getDefaultRoute(role))
-        return
-      }
+    if (menuKey !== null && !canAccessMenu(role, menuKey, lokasi)) {
+      router.replace(defaultRoute)
+      return false
     }
 
     setIsAuthorized(true)
-  }, [router, pathname, handleSessionTimeout])
+    return true
+  }, [pathname, router])
 
-  // Track user activity and auto-logout on 1-hour idle timeout
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const ok = verifyAccess()
+    if (!ok) return
+
+    // Push a history guard on initial dashboard load so clicking browser Back from beranda does not leave dashboard
+    if (!historyGuardInitializedRef.current) {
+      historyGuardInitializedRef.current = true
+      window.history.pushState({ dashboardGuard: true }, "", window.location.href)
+    }
+  }, [verifyAccess])
+
+  // Track user activity, bfcache pageshow, popstate (Back/Forward), and cross-tab logout
   useEffect(() => {
     if (!isAuthorized) return
 
-    // Throttle activity updates to once every 15 seconds
     const recordActivity = () => {
       const now = Date.now()
       if (now - lastUpdateRef.current > 15000) {
@@ -89,7 +79,6 @@ export default function Layout({ children }) {
       }
     }
 
-    // Window events that signify user activity
     const activityEvents = [
       "mousedown",
       "mousemove",
@@ -103,7 +92,6 @@ export default function Layout({ children }) {
       window.addEventListener(event, recordActivity, { passive: true })
     })
 
-    // Interval to check every 15 seconds if 1 hour has elapsed
     const interval = setInterval(() => {
       const last = getLastActivity()
       if (last && Date.now() - last > SESSION_TIMEOUT_MS) {
@@ -111,13 +99,40 @@ export default function Layout({ children }) {
       }
     }, 15000)
 
-    // Storage event: sync logout across tabs
     const handleStorageChange = (e) => {
       if (e.key === "adminData" && !e.newValue) {
-        router.replace("/login")
+        setIsAuthorized(false)
+        clearAdminSession()
+        window.location.replace("/login")
       }
     }
+
+    const handlePopState = () => {
+      const { valid, defaultRoute } = validateAdminSession()
+      if (!valid) {
+        setIsAuthorized(false)
+        window.location.replace("/login")
+        return
+      }
+      if (window.location.pathname === "/login") {
+        window.location.replace(defaultRoute)
+        return
+      }
+      // Re-anchor history guard if user pressed Back all the way to the initial dashboard entry
+      if (window.location.pathname === defaultRoute) {
+        window.history.pushState({ dashboardGuard: true }, "", window.location.href)
+      }
+    }
+
+    const handlePageShow = (e) => {
+      if (e.persisted || !validateAdminSession().valid) {
+        verifyAccess()
+      }
+    }
+
     window.addEventListener("storage", handleStorageChange)
+    window.addEventListener("popstate", handlePopState)
+    window.addEventListener("pageshow", handlePageShow)
 
     return () => {
       activityEvents.forEach((event) => {
@@ -125,8 +140,10 @@ export default function Layout({ children }) {
       })
       clearInterval(interval)
       window.removeEventListener("storage", handleStorageChange)
+      window.removeEventListener("popstate", handlePopState)
+      window.removeEventListener("pageshow", handlePageShow)
     }
-  }, [isAuthorized, handleSessionTimeout, router])
+  }, [isAuthorized, handleSessionTimeout, verifyAccess])
 
   if (!isAuthorized) {
     return (

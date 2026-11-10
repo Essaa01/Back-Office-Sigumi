@@ -1,15 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import ThemeToggle from "@/components/ThemeToggle"
 import Image from "next/image"
-import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, ShieldCheck, Navigation, UserCog } from "lucide-react"
+import { LayoutDashboard, Newspaper, Tent, Map, Video, MessageSquare, Users, LogOut, User, MapPin, X, Lock, Save, Loader2, BookOpen, Navigation, UserCog } from "lucide-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { canAccessMenu } from "@/lib/rbac"
-import { clearAdminSession } from "@/lib/utils/auth"
+import { clearAdminSession, getAdminData } from "@/lib/utils/auth"
 
 // All possible menu items — each has a `menuKey` matching MENU_KEYS in lib/rbac.js
 const ALL_MENU_ITEMS = [
@@ -35,8 +35,7 @@ const ROLE_BADGE_STYLE = {
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const [admin, setAdmin] = useState(null)
+  const [admin] = useState(() => getAdminData())
 
   // Modal State
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -49,19 +48,11 @@ export default function Sidebar() {
     ? ALL_MENU_ITEMS.filter((item) => canAccessMenu(admin.role, item.menuKey, admin.lokasi))
     : []
 
-  useEffect(() => {
-    // Read admin data from localStorage
-    const savedAdmin = localStorage.getItem("adminData")
-    if (savedAdmin) {
-      setAdmin(JSON.parse(savedAdmin))
-    }
-  }, [])
-
   const handleLogout = () => {
     setIsLogoutConfirmOpen(false)
     clearAdminSession()
     toast.success("Berhasil keluar dari sesi admin")
-    router.replace("/login")
+    window.location.replace("/login")
   }
 
   const handleUpdateProfile = async (e) => {

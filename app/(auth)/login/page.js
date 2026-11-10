@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
+import { setAdminSession, validateAdminSession } from "@/lib/utils/auth"
+import { getDefaultRoute } from "@/lib/rbac"
 import { toast } from "sonner"
 import { Lock, Mail, Loader2 } from "lucide-react"
 
@@ -11,6 +13,52 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+
+  useEffect(() => {
+    const checkAndGuard = () => {
+      const { valid, defaultRoute } = validateAdminSession()
+      if (valid) {
+        window.location.replace(defaultRoute)
+        return true
+      }
+      return false
+    }
+
+    if (checkAndGuard()) return
+
+    // Trap browser Back/Forward while unauthenticated on /login so user cannot go back to dashboard history
+    window.history.replaceState({ page: "login" }, "", "/login")
+    window.history.pushState({ page: "login-guard" }, "", "/login")
+
+    const handlePopState = () => {
+      if (checkAndGuard()) return
+      window.history.pushState({ page: "login-guard" }, "", "/login")
+    }
+
+    const handlePageShow = () => {
+      checkAndGuard()
+    }
+
+    const handleStorageChange = () => {
+      checkAndGuard()
+    }
+
+    window.addEventListener("popstate", handlePopState)
+    window.addEventListener("pageshow", handlePageShow)
+    window.addEventListener("storage", handleStorageChange)
+
+    const timer = setTimeout(() => {
+      setIsCheckingSession(false)
+    }, 0)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener("popstate", handlePopState)
+      window.removeEventListener("pageshow", handlePageShow)
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [router])
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -30,31 +78,32 @@ export default function LoginPage() {
         return
       }
 
-      // Login sukses
-      // Simpan data admin (termasuk role) dan timestamp aktivitas ke localStorage
-      localStorage.setItem(
-        "adminData",
-        JSON.stringify({
-          id: data.id,
-          email: data.email,
-          lokasi: data.lokasi,
-          role: data.role,
-        })
-      )
-      localStorage.setItem("lastActivity", Date.now().toString())
+      // Simpan sesi ke localStorage + cookie
+      setAdminSession({
+        id: data.id,
+        email: data.email,
+        lokasi: data.lokasi,
+        role: data.role,
+      })
 
-      toast.success(`Selamat Datang Admin!`)
-      // Redirect berdasarkan role:
-      // Dinas Pariwisata → /tourism, Admin Pengelola → /admin-management, lainnya → /menu
-      let defaultRoute = "/menu"
-      if (data.role === "Dinas Pariwisata") defaultRoute = "/tourism"
-      else if (data.role === "Admin Pengelola") defaultRoute = "/admin-management"
-      router.push(defaultRoute)
-    } catch (err) {
+      toast.success("Selamat Datang Admin!")
+      const defaultRoute = getDefaultRoute(data.role)
+      window.location.replace(defaultRoute)
+    } catch {
       toast.error("Terjadi kesalahan saat memproses login")
-    } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#f5f0e6] dark:bg-[#121212]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Memeriksa Sesi...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
