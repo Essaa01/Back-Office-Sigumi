@@ -58,5 +58,32 @@ export const trackingService = {
       return { data: null, error }
     }
     return { data, error }
+  },
+
+  // Subscribe to real-time track point additions for a specific session
+  subscribeToSessionTrack(sessionId, onInsertPoint) {
+    if (!sessionId) return () => {}
+    const channelName = `session_track_${sessionId}_${Date.now()}`
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "hiking_track_points",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          if (payload.new && onInsertPoint) {
+            onInsertPoint(payload.new)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }
 }

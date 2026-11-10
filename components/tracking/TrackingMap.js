@@ -15,10 +15,26 @@ const MapClient = dynamic(() => import("./MapClient"), {
   ),
 })
 
-export default function TrackingMap({ selectedSession, trackPoints }) {
+export default function TrackingMap({
+  selectedSession,
+  trackPoints,
+  sosAlerts = [],
+  selectedSosAlert = null,
+  now,
+  onSelectSosAlert,
+  onUpdateSosStatus,
+}) {
   return (
     <div className="w-full h-full relative z-0">
-      <MapClient selectedSession={selectedSession} trackPoints={trackPoints} />
+      <MapClient
+        selectedSession={selectedSession}
+        trackPoints={trackPoints}
+        sosAlerts={sosAlerts}
+        selectedSosAlert={selectedSosAlert}
+        now={now}
+        onSelectSosAlert={onSelectSosAlert}
+        onUpdateSosStatus={onUpdateSosStatus}
+      />
     </div>
   )
 }
