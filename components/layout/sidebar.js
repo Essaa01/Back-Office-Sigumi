@@ -48,9 +48,14 @@ export default function Sidebar() {
     ? ALL_MENU_ITEMS.filter((item) => canAccessMenu(admin.role, item.menuKey, admin.lokasi))
     : []
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLogoutConfirmOpen(false)
     clearAdminSession()
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch {
+      // Ignore network errors, client cookie is already cleared
+    }
     toast.success("Berhasil keluar dari sesi admin")
     window.location.replace("/login")
   }

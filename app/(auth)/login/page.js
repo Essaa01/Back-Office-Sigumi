@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 import { setAdminSession, validateAdminSession } from "@/lib/utils/auth"
 import { getDefaultRoute } from "@/lib/rbac"
@@ -9,14 +8,12 @@ import { toast } from "sonner"
 import { Lock, Mail, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
 
   useEffect(() => {
-    const checkAndGuard = () => {
+    const redirectIfAuthenticated = () => {
       const { valid, defaultRoute } = validateAdminSession()
       if (valid) {
         window.location.replace(defaultRoute)
@@ -25,85 +22,93 @@ export default function LoginPage() {
       return false
     }
 
-    if (checkAndGuard()) return
-
-    // Trap browser Back/Forward while unauthenticated on /login so user cannot go back to dashboard history
-    window.history.replaceState({ page: "login" }, "", "/login")
-    window.history.pushState({ page: "login-guard" }, "", "/login")
-
-    const handlePopState = () => {
-      if (checkAndGuard()) return
-      window.history.pushState({ page: "login-guard" }, "", "/login")
-    }
+    redirectIfAuthenticated()
 
     const handlePageShow = () => {
-      checkAndGuard()
+      redirectIfAuthenticated()
+    }
+
+    const handlePopState = () => {
+      redirectIfAuthenticated()
     }
 
     const handleStorageChange = () => {
-      checkAndGuard()
+      redirectIfAuthenticated()
     }
 
-    window.addEventListener("popstate", handlePopState)
     window.addEventListener("pageshow", handlePageShow)
+    window.addEventListener("popstate", handlePopState)
     window.addEventListener("storage", handleStorageChange)
 
-    const timer = setTimeout(() => {
-      setIsCheckingSession(false)
-    }, 0)
-
     return () => {
-      clearTimeout(timer)
-      window.removeEventListener("popstate", handlePopState)
       window.removeEventListener("pageshow", handlePageShow)
+      window.removeEventListener("popstate", handlePopState)
       window.removeEventListener("storage", handleStorageChange)
     }
-  }, [router])
+  }, [])
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setIsLoading(true)
 
-    try {
-      const { data, error } = await supabase
-        .from("admins")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password)
-        .single()
+    const cleanEmail = email.trim()
 
-      if (error || !data) {
-        toast.error("Email atau password yang Anda masukkan salah")
-        setIsLoading(false)
-        return
+    try {
+      let adminData = null
+
+      // 1. Authenticate via server API route (avoids browser HTTPS Mixed-Content & sets HTTP cookies)
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, password }),
+        })
+
+        if (res.ok) {
+          const json = await res.json()
+          adminData = json?.data ?? null
+        } else if (res.status === 401) {
+          toast.error("Email atau password yang Anda masukkan salah")
+          setIsLoading(false)
+          return
+        }
+      } catch {
+        // Fallback to direct client query if server route is unreachable
+      }
+
+      // 2. Fallback direct client query if server API didn't return adminData
+      if (!adminData) {
+        const { data, error } = await supabase
+          .from("admins")
+          .select("*")
+          .ilike("email", cleanEmail)
+          .eq("password", password)
+          .limit(1)
+
+        if (error || !Array.isArray(data) || data.length === 0) {
+          toast.error("Email atau password yang Anda masukkan salah")
+          setIsLoading(false)
+          return
+        }
+
+        adminData = {
+          id: data[0].id,
+          email: data[0].email,
+          lokasi: data[0].lokasi ?? null,
+          role: data[0].role || "BPBD",
+        }
       }
 
       // Simpan sesi ke localStorage + cookie
-      setAdminSession({
-        id: data.id,
-        email: data.email,
-        lokasi: data.lokasi,
-        role: data.role,
-      })
+      setAdminSession(adminData)
 
       toast.success("Selamat Datang Admin!")
-      const defaultRoute = getDefaultRoute(data.role)
+      const defaultRoute = getDefaultRoute(adminData.role)
       window.location.replace(defaultRoute)
     } catch {
       toast.error("Terjadi kesalahan saat memproses login")
       setIsLoading(false)
     }
-  }
-
-  if (isCheckingSession) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#f5f0e6] dark:bg-[#121212]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Memeriksa Sesi...</p>
-        </div>
-      </div>
-    )
   }
 
   return (

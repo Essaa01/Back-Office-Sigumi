@@ -19,12 +19,12 @@ export default function Layout({ children }) {
   const pathname = usePathname()
   const [isAuthorized, setIsAuthorized] = useState(false)
   const lastUpdateRef = useRef(0)
-  const historyGuardInitializedRef = useRef(false)
 
   // Logout due to session timeout
   const handleSessionTimeout = useCallback(() => {
     setIsAuthorized(false)
     clearAdminSession()
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {})
     toast.error("Sesi telah berakhir karena tidak ada aktivitas selama 1 jam. Silakan login kembali.")
     window.location.replace("/login")
   }, [])
@@ -57,14 +57,7 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    const ok = verifyAccess()
-    if (!ok) return
-
-    // Push a history guard on initial dashboard load so clicking browser Back from beranda does not leave dashboard
-    if (!historyGuardInitializedRef.current) {
-      historyGuardInitializedRef.current = true
-      window.history.pushState({ dashboardGuard: true }, "", window.location.href)
-    }
+    verifyAccess()
   }, [verifyAccess])
 
   // Track user activity, bfcache pageshow, popstate (Back/Forward), and cross-tab logout
@@ -116,11 +109,6 @@ export default function Layout({ children }) {
       }
       if (window.location.pathname === "/login") {
         window.location.replace(defaultRoute)
-        return
-      }
-      // Re-anchor history guard if user pressed Back all the way to the initial dashboard entry
-      if (window.location.pathname === defaultRoute) {
-        window.history.pushState({ dashboardGuard: true }, "", window.location.href)
       }
     }
 
