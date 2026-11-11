@@ -1,6 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase/client"
 
+const DEFAULT_STORAGE_SUPABASE_URL = "https://rtwanteecrvydxyrgpii.supabase.co"
+const DEFAULT_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0d2FudGVlY3J2eWR4eXJncGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMzU2NTQsImV4cCI6MjA5MDgxMTY1NH0.ofz33s1PLvEGu_rgnu1CTXt_IUKOi0Ppni_8rvCxKrU"
+
 const MIME_MAP = {
   ".svg": "image/svg+xml",
   ".gif": "image/gif",
@@ -22,9 +26,9 @@ const getStorageClient = () => {
     process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL ||
     (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co")
       ? process.env.NEXT_PUBLIC_SUPABASE_URL
-      : null)
+      : DEFAULT_STORAGE_SUPABASE_URL)
 
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
 
   if (storageUrl && anonKey) {
     storageClientInstance = createClient(storageUrl, anonKey)
@@ -87,4 +91,4 @@ export const uploadImage = async (file) => {
   return data.publicUrl
 }
 
-export const uploadMedia = uploadImage
+export const uploadMedia = uploadImage
